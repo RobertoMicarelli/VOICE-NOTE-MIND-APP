@@ -759,8 +759,8 @@ Nota: NON includere testo aggiuntivo al di fuori della struttura Markdown della 
             // Pulisci il contenitore prima di creare una nuova mappa
             mindmapElement.innerHTML = ''; 
 
-            const { Markmap, Transformer } = window;
-            const transformer = new Transformer(); // Assicurati che Transformer sia disponibile
+            const { Markmap, Transformer } = window.markmap;
+            const transformer = new Transformer();
             const { root } = transformer.transform(markdown);
 
             // Crea la markmap
