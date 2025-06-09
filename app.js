@@ -759,13 +759,24 @@ Nota: NON includere testo aggiuntivo al di fuori della struttura Markdown della 
             // Pulisci il contenitore prima di creare una nuova mappa
             mindmapElement.innerHTML = ''; 
 
-            const { Markmap, Transformer } = window.markmap;
-            const transformer = new Transformer();
-            const { root } = transformer.transform(markdown);
+            // Inserisci il markdown in un tag script di tipo text/template
+            // Questo è il modo in cui markmap-autoloader si aspetta di leggere il contenuto
+            const scriptTag = document.createElement('script');
+            scriptTag.setAttribute('type', 'text/template');
+            scriptTag.textContent = markdown;
+            mindmapElement.appendChild(scriptTag);
 
-            // Crea la markmap
-            Markmap.create(mindmapElement, null, root);
-            console.log("Mind Map rendered successfully.");
+            // Attiva il rendering dell'autoloader con un piccolo ritardo per assicurare l'inizializzazione
+            if (window.markmap && window.markmap.autoLoader) {
+                setTimeout(() => {
+                    window.markmap.autoLoader.renderAll();
+                    console.log("Markmap Autoloader triggered.");
+                }, 100); // Piccolo ritardo per assicurare che tutto sia pronto
+            } else {
+                console.error("markmap.autoLoader non trovato. Assicurati che markmap-autoloader.js sia caricato correttamente.");
+                alert("Errore: Markmap Autoloader non è pronto. Controlla la console.");
+            }
+            console.log("Mind Map rendering process initiated.");
         } catch (error) {
             console.error("Error rendering Markmap:", error);
             alert("Errore durante la creazione della Mappa Mentale. Controlla la console per i dettagli. Assicurati che la trascrizione sia nel formato corretto per Markmap.");
