@@ -1,0 +1,370 @@
+:root {
+    --primary-color: #007AFF;
+    --danger-color: #FF3B30;
+    --background-color: #F2F2F7;
+    --text-color: #000000;
+    --secondary-text-color: #8E8E93;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+.app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.recording-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.record-button {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.record-button.recording {
+    background-color: var(--danger-color);
+    transform: scale(1.1);
+}
+
+.record-icon {
+    width: 30px;
+    height: 30px;
+    background-color: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.recording .record-icon {
+    width: 30px;
+    height: 30px;
+    background-color: white;
+    border-radius: 4px;
+}
+
+.recording-status {
+    color: var(--secondary-text-color);
+    font-size: 16px;
+}
+
+.recordings-list {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.recordings-list h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+}
+
+.recordings-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.recording-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.recording-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recording-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+    color: var(--primary-color);
+}
+
+.recording-info {
+    flex: 1;
+}
+
+.recording-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.recording-date {
+    font-size: 14px;
+    color: var(--secondary-text-color);
+}
+
+.save-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.save-dialog.hidden {
+    display: none;
+}
+
+.save-dialog-content {
+    background-color: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+}
+
+.save-dialog h3 {
+    margin-bottom: 16px;
+    font-size: 20px;
+}
+
+.save-dialog input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E5E5EA;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 16px;
+}
+
+.dialog-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.primary-button, .secondary-button {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    flex: 1;
+}
+
+.primary-button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.secondary-button {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.options-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    margin-left: 8px;
+    color: var(--secondary-text-color);
+    transition: color 0.2s ease;
+}
+
+.options-button:hover {
+    color: var(--primary-color);
+}
+
+.options-button svg {
+    width: 24px;
+    height: 24px;
+}
+
+.recordings-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.recordings-menu.hidden {
+    display: none;
+}
+
+.recordings-menu-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.menu-option {
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.menu-option:hover {
+    background-color: #E0E0E5;
+}
+
+.menu-option.danger {
+    color: var(--danger-color);
+}
+
+.menu-option.danger:hover {
+    background-color: #FFDDDD;
+}
+
+.menu-option.secondary {
+    color: var(--secondary-text-color);
+}
+
+.menu-option.secondary:hover {
+    background-color: #E0E0E5;
+}
+
+@media (max-width: 480px) {
+    .app-container {
+        padding: 16px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .record-button {
+        width: 70px;
+        height: 70px;
+    }
+
+    .record-icon {
+        width: 26px;
+        height: 26px;
+    }
+}
+
+/* Header and Logo Styles */
+.app-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center content horizontally */
+    gap: 10px; /* Space between logo and text */
+    margin-bottom: 40px; /* Keep the original margin-bottom of the header */
+}
+
+.app-logo {
+    width: 60px; /* Adjust as needed */
+    height: 60px; /* Adjust as needed */
+    border-radius: 50%; /* If your logo is round */
+    object-fit: contain; /* Ensure the image scales correctly */
+}
+
+header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0; /* Remove default h1 margin if it causes issues with flexbox */
+}
+
+.mindmap-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000; /* Assicurati che sia sopra altri elementi */
+}
+
+.mindmap-dialog.hidden {
+    display: none;
+}
+
+.mindmap-dialog-content {
+    background-color: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 800px;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mindmap-dialog-content h3 {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.markmap-container {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%; /* Occupa lo spazio disponibile nel dialog */
+    background-color: #f8f8f8; /* Un leggero sfondo per il contenitore della mappa */
+    border-radius: 8px;
+    overflow: hidden; /* Per contenere bene la mappa */
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
+
+/* Stili per il pulsante Chiudi nella mappa mentale, se necessario */
+.mindmap-dialog-content .secondary-button {
+    margin-top: 10px; /* Spazio dal contenitore della mappa */
+    align-self: flex-end; /* Allinea il pulsante a destra */
+} 
