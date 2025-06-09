@@ -239,11 +239,10 @@ class App {
         const cancelButton = document.getElementById('cancelButton');
         const saveDialog = document.getElementById('saveDialog');
         const recordingsMenu = document.getElementById('recordingsMenu');
-        const transcribeOption = document.getElementById('transcribeOption');
+        const transcribeAndSaveFileOption = document.getElementById('transcribeAndSaveFileOption');
+        const transcribeAndGenerateMindMapOption = document.getElementById('transcribeAndGenerateMindMapOption');
         const deleteOption = document.getElementById('deleteOption');
         const listenOption = document.getElementById('listenOption');
-        const copyToNotesOption = document.getElementById('copyToNotesOption');
-        const showMindMapOption = document.getElementById('showMindMapOption');
         const cancelMenu = document.getElementById('cancelMenu');
         const mindMapDialog = document.getElementById('mindMapDialog');
         const closeMindMapDialog = document.getElementById('closeMindMapDialog');
@@ -258,11 +257,10 @@ class App {
                 this.hideRecordingsMenu();
             }
         });
-        transcribeOption.addEventListener('click', () => this.handleTranscribe());
+        transcribeAndSaveFileOption.addEventListener('click', () => this.handleTranscribeAndSaveFile());
+        transcribeAndGenerateMindMapOption.addEventListener('click', () => this.handleTranscribeAndGenerateMindMap());
         deleteOption.addEventListener('click', () => this.handleDelete());
         listenOption.addEventListener('click', () => this.handleListen());
-        copyToNotesOption.addEventListener('click', () => this.handleCopyToNotes());
-        showMindMapOption.addEventListener('click', () => this.handleShowMindMap());
         cancelMenu.addEventListener('click', () => this.hideRecordingsMenu());
 
         // Gestione eventi per il dialog della Mappa Mentale
@@ -390,7 +388,7 @@ class App {
         this.hideRecordingsMenu();
     }
 
-    async handleTranscribe() {
+    async handleTranscribeAndSaveFile() {
         if (!this.currentMenuRecordingId) return;
 
         const recordingToTranscribe = this.recordings.find(rec => rec.id === this.currentMenuRecordingId);
@@ -398,9 +396,6 @@ class App {
             alert("Trascrizione avviata... (Potrebbe richiedere qualche secondo)"); 
             this.hideRecordingsMenu();
             
-            // Chiedi all'utente se vuole anche la mappa mentale
-            const generateMindMap = confirm("Vuoi anche il contenuto Markdown per la Mappa Mentale? (Se sì, la trascrizione includerà il codice per la mappa mentale Markmap in coda. Se no, verrà generata solo la trascrizione.)");
-
             // Aggiorna l'UI per mostrare lo stato di trascrizione
             recordingToTranscribe.transcription = "Trascrizione in corso...";
             this.renderRecordings();
@@ -408,22 +403,28 @@ class App {
             try {
                 const audioBlob = await this.indexedDBManager.getBlob(recordingToTranscribe.id);
                 if (audioBlob) {
-                    // Passa il parametro generateMindMap alla funzione transcribeAudio
-                    const transcriptionOutput = await this.transcribeAudio(audioBlob, generateMindMap);
+                    // Chiama transcribeAudio solo per la trascrizione, senza mappa mentale
+                    const transcriptionOutput = await this.transcribeAudio(audioBlob, false); // generateMindMap = false
                     
                     // Salva la trascrizione nell'oggetto registrazione
                     this.saveTranscription(recordingToTranscribe.id, transcriptionOutput);
 
-                    // Offri il download del file MD
-                    this.downloadMarkdownFile(recordingToTranscribe.name, transcriptionOutput);
+                    // Chiedi all'utente se vuole scaricare il file Markdown
+                    const shouldSaveFile = confirm("Trascrizione completata. Vuoi scaricare il file Markdown?");
+                    if (shouldSaveFile) {
+                        const fileName = `${recordingToTranscribe.name.replace(/\s+/g, '-')}.md`;
+                        this.downloadFile(fileName, transcriptionOutput, 'text/markdown');
+                        alert(`File Markdown "${fileName}" generato e scaricato!`);
+                    }
 
-                    // Se l'utente ha scelto la mappa mentale, visualizzala
-                    if (generateMindMap) {
-                        // La mappa è stata generata, mostriamo il dialog e la renderizziamo
-                        this.showMindMapDialog();
-                        this.renderMindMap(transcriptionOutput); // Passa il markdown alla funzione di rendering
-                    } else {
-                        alert("Trascrizione completata. Per generare una Mappa Mentale, trascrivi di nuovo e seleziona l'opzione.");
+                    // Copia sempre negli appunti e prova ad aprire l'app Note
+                    try {
+                        await navigator.clipboard.writeText(transcriptionOutput);
+                        alert('Trascrizione copiata negli appunti! Ora puoi incollarla nell\'app Note.');
+                        window.location.href = 'mobilenotes://';
+                    } catch (err) {
+                        console.error('Errore durante la copia o l\'apertura dell\'app Note:', err);
+                        alert('Impossibile copiare la trascrizione o aprire l\'app Note. Assicurati di aver dato i permessi.');
                     }
                     
                 } else {
@@ -440,10 +441,59 @@ class App {
         }
     }
 
-    // Funzione per offrire il download del file Markdown
-    downloadMarkdownFile(recordingName, markdownContent) {
-        const fileName = `${recordingName.replace(/\s+/g, '-')}.md`; // Sostituisci spazi con trattini per il nome file
-        const blob = new Blob([markdownContent], { type: 'text/markdown' });
+    async handleTranscribeAndGenerateMindMap() {
+        if (!this.currentMenuRecordingId) return;
+
+        const recordingToTranscribe = this.recordings.find(rec => rec.id === this.currentMenuRecordingId);
+        if (recordingToTranscribe) {
+            alert("Generazione Mappa Mentale avviata... (Potrebbe richiedere più tempo)"); 
+            this.hideRecordingsMenu();
+            
+            recordingToTranscribe.transcription = "Generazione Mappa Mentale in corso...";
+            this.renderRecordings();
+
+            try {
+                const audioBlob = await this.indexedDBManager.getBlob(recordingToTranscribe.id);
+                if (audioBlob) {
+                    // Chiama transcribeAudio per generare la mappa mentale
+                    const mindMapMarkdown = await this.transcribeAudio(audioBlob, true); // generateMindMap = true
+                    
+                    // Salva la trascrizione (che ora è il markdown della mappa) nell'oggetto registrazione
+                    this.saveTranscription(recordingToTranscribe.id, mindMapMarkdown);
+
+                    const now = new Date();
+                    const fileNameBase = `Mappa-${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}-${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
+
+                    // Salva il file Markdown della mappa mentale
+                    this.downloadFile(`${fileNameBase}.md`, mindMapMarkdown, 'text/markdown');
+                    alert(`File Markdown "${fileNameBase}.md" della mappa generato e scaricato!`);
+
+                    // Genera e salva il file HTML della mappa mentale
+                    const htmlContent = this.generateMarkmapHtml(mindMapMarkdown);
+                    this.downloadFile(`${fileNameBase}.html`, htmlContent, 'text/html');
+                    alert(`File HTML "${fileNameBase}.html" della mappa generato e scaricato!`);
+
+                    // Mostra la mappa mentale nell'app
+                    this.showMindMapDialog();
+                    this.renderMindMap(mindMapMarkdown);
+                    
+                } else {
+                    alert("Impossibile trovare l'audio per la generazione della mappa mentale.");
+                    recordingToTranscribe.transcription = "Generazione Mappa Mentale fallita: audio non trovato.";
+                    this.renderRecordings();
+                }
+            } catch (error) {
+                console.error("Error during mind map generation:", error);
+                alert("Errore durante la generazione della Mappa Mentale. Controlla la console per i dettagli.");
+                recordingToTranscribe.transcription = "Generazione Mappa Mentale fallita.";
+                this.renderRecordings();
+            }
+        }
+    }
+
+    // Funzione generica per offrire il download di qualsiasi file
+    downloadFile(fileName, content, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
         const url = URL.createObjectURL(blob);
         
         const a = document.createElement('a');
@@ -453,7 +503,31 @@ class App {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        alert(`File Markdown "${fileName}" generato e scaricato!`);
+    }
+
+    // Funzione per generare il contenuto HTML completo di una mappa mentale
+    generateMarkmapHtml(markdownContent) {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mappa Mentale</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #markmap { width: 100vw; height: 100vh; }
+    </style>
+    <!-- Markmap Autoloader (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@latest"></script>
+</head>
+<body>
+    <div id="markmap" class="markmap">
+        <script type="text/template">
+${markdownContent}
+        </script>
+    </div>
+</body>
+</html>`;
     }
 
     async transcribeAudio(audioBlob, generateMindMap) {
@@ -708,28 +782,6 @@ Nota: NON includere testo aggiuntivo al di fuori della struttura Markdown della 
         const formattedMinutes = String(minutes).padStart(2, '0');
         const formattedSeconds = String(remainingSeconds).padStart(2, '0');
         return `${formattedMinutes}:${formattedSeconds}`;
-    }
-
-    async handleCopyToNotes() {
-        if (!this.currentMenuRecordingId) return;
-
-        const recordingToCopy = this.recordings.find(rec => rec.id === this.currentMenuRecordingId);
-        if (recordingToCopy && recordingToCopy.transcription) {
-            try {
-                await navigator.clipboard.writeText(recordingToCopy.transcription);
-                alert('Trascrizione copiata negli appunti! Ora puoi incollarla nell\'app Note.');
-                this.hideRecordingsMenu();
-
-                // Tentativo di aprire l'app Note
-                window.location.href = 'mobilenotes://';
-            } catch (err) {
-                console.error('Errore durante la copia o l\'apertura dell\'app Note:', err);
-                alert('Impossibile copiare la trascrizione o aprire l\'app Note. Assicurati di aver dato i permessi.');
-            }
-        } else {
-            alert('Nessuna trascrizione disponibile per questa registrazione.');
-            this.hideRecordingsMenu();
-        }
     }
 
     async handleShowMindMap() {
