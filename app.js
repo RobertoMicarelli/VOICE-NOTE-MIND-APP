@@ -411,15 +411,7 @@ class App {
                         const fileName = this.getTimestampedFileName(recordingToTranscribe.name, 'md');
                         this.downloadFile(fileName, transcriptionOutput, 'text/markdown');
                     }
-
-                    // Try to copy to clipboard
-                    try {
-                        await navigator.clipboard.writeText(transcriptionOutput);
-                        alert('Trascrizione copiata negli appunti! Puoi incollarla manualmente nell\'app Note.');
-                    } catch (err) {
-                        console.error('Errore durante la copia negli appunti:', err);
-                        alert('Impossibile copiare la trascrizione negli appunti. Errore: ' + err.message);
-                    }
+                    alert("Trascrizione completata! Controlla i tuoi download per il file Markdown.");
                 } else {
                     alert("Impossibile trovare l\'audio per la trascrizione.");
                     recordingToTranscribe.transcription = "Trascrizione fallita: audio non trovato.";
@@ -515,7 +507,13 @@ class App {
     <title>Mappa Mentale</title>
     <style>
         body { margin: 0; overflow: hidden; }
+        /* Stili per desktop (dimensioni fisse) */
         #markmap { width: 1920px; height: 1080px; }
+
+        /* Media query per dispositivi mobili (dimensioni responsive) */
+        @media (max-width: 768px) {
+            #markmap { width: 100vw; height: 100vh; }
+        }
     </style>
     <!-- Markmap Autoloader (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@latest"></script>
@@ -544,9 +542,24 @@ ${markdownContent}
         const blobToBase64 = (blob) => {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
+                reader.onloadend = () => {
+                    if (reader.result) {
+                        resolve(reader.result.split(',')[1]);
+                    } else {
+                        console.error("FileReader result is null or empty. Blob type:", blob.type, "Size:", blob.size);
+                        reject("Failed to read Blob as Data URL.");
+                    }
+                };
+                reader.onerror = (error) => {
+                    console.error("FileReader error:", error);
+                    reject(error);
+                };
+                if (blob) {
+                    reader.readAsDataURL(blob);
+                } else {
+                    console.error("Input blob for blobToBase64 is null or undefined.");
+                    reject("Input Blob is null or undefined.");
+                }
             });
         };
 
@@ -849,7 +862,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Registra il Service Worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
+        navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
                 console.log('Service Worker registrato con successo:', registration);
             })
