@@ -515,7 +515,7 @@ class App {
     <title>Mappa Mentale</title>
     <style>
         body { margin: 0; overflow: hidden; }
-        #markmap { width: 100vw; height: 100vh; }
+        #markmap { width: 1920px; height: 1080px; }
     </style>
     <!-- Markmap Autoloader (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@latest"></script>
