@@ -401,25 +401,25 @@ class App {
             try {
                 const audioBlob = await this.indexedDBManager.getBlob(recordingToTranscribe.id);
                 if (audioBlob) {
+                    // Always use generateMindMap: false for simple transcription
                     const transcriptionOutput = await this.transcribeAudio(audioBlob, false); 
                     
                     this.saveTranscription(recordingToTranscribe.id, transcriptionOutput);
 
-                    // Always download the file
-                    const fileName = this.getTimestampedFileName(recordingToTranscribe.name, 'md');
-                    this.downloadFile(fileName, transcriptionOutput, 'text/markdown');
-                    
+                    // Ask user if they want to save the transcription file
+                    if (confirm("Vuoi salvare la trascrizione come file Markdown?")) {
+                        const fileName = this.getTimestampedFileName(recordingToTranscribe.name, 'md');
+                        this.downloadFile(fileName, transcriptionOutput, 'text/markdown');
+                    }
 
-                    // Attempt to copy to clipboard and open notes
+                    // Try to copy to clipboard
                     try {
                         await navigator.clipboard.writeText(transcriptionOutput);
-                        alert('Trascrizione copiata negli appunti! Ora puoi incollarla nell\'app Note.');
+                        alert('Trascrizione copiata negli appunti! Puoi incollarla manualmente nell\'app Note.');
                     } catch (err) {
                         console.error('Errore durante la copia negli appunti:', err);
                         alert('Impossibile copiare la trascrizione negli appunti. Errore: ' + err.message);
                     }
-                    
-                    alert("Trascrizione completata. Controlla i download per il file Markdown. Potrebbe essere necessario incollare manualmente negli appunti e aprire l\'app Note.");
                 } else {
                     alert("Impossibile trovare l\'audio per la trascrizione.");
                     recordingToTranscribe.transcription = "Trascrizione fallita: audio non trovato.";
@@ -450,23 +450,28 @@ class App {
                 if (audioBlob) {
                     // 1. Get and save plain transcription
                     const plainTranscription = await this.transcribeAudio(audioBlob, false);
-                    this.saveTranscription(recordingToTranscribe.id, plainTranscription); // Save plain transcription to IndexedDB
-                    const plainTranscriptionFileName = this.getTimestampedFileName(recordingToTranscribe.name, 'md');
-                    this.downloadFile(plainTranscriptionFileName, plainTranscription, 'text/markdown');
-                    alert(`File Trascrizione "${plainTranscriptionFileName}" generato e scaricato!`);
-
+                    this.saveTranscription(recordingToTranscribe.id, plainTranscription);
+                    
+                    if (confirm("Vuoi salvare la trascrizione semplice come file Markdown?")) {
+                        const plainTranscriptionFileName = this.getTimestampedFileName(recordingToTranscribe.name, 'md');
+                        this.downloadFile(plainTranscriptionFileName, plainTranscription, 'text/markdown');
+                    }
 
                     // 2. Get and save Markmap Markdown
                     const mindMapMarkdown = await this.transcribeAudio(audioBlob, true);
-                    const mindMapMdFileName = this.getTimestampedFileName(recordingToTranscribe.name + '-Mappa', 'md');
-                    this.downloadFile(mindMapMdFileName, mindMapMarkdown, 'text/markdown');
-                    alert(`File Markmap "${mindMapMdFileName}" della mappa generato e scaricato!`);
+                    
+                    if (confirm("Vuoi salvare il file Markdown della mappa mentale?")) {
+                        const mindMapMdFileName = this.getTimestampedFileName(recordingToTranscribe.name + '-Mappa', 'md');
+                        this.downloadFile(mindMapMdFileName, mindMapMarkdown, 'text/markdown');
+                    }
 
                     // 3. Generate and save Markmap HTML
                     const htmlContent = this.generateMarkmapHtml(mindMapMarkdown);
-                    const mindMapHtmlFileName = this.getTimestampedFileName(recordingToTranscribe.name + '-Mappa', 'html');
-                    this.downloadFile(mindMapHtmlFileName, htmlContent, 'text/html');
-                    alert(`File HTML "${mindMapHtmlFileName}" della mappa generato e scaricato!`);
+                    
+                    if (confirm("Vuoi salvare il file HTML della mappa mentale?")) {
+                        const mindMapHtmlFileName = this.getTimestampedFileName(recordingToTranscribe.name + '-Mappa', 'html');
+                        this.downloadFile(mindMapHtmlFileName, htmlContent, 'text/html');
+                    }
 
                     // Show the mind map in the app
                     this.showMindMapDialog();
@@ -510,7 +515,7 @@ class App {
     <title>Mappa Mentale</title>
     <style>
         body { margin: 0; overflow: hidden; }
-        #markmap { width: 1920px; height: 1080px; }
+        #markmap { width: 100vw; height: 100vh; }
     </style>
     <!-- Markmap Autoloader (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@latest"></script>
